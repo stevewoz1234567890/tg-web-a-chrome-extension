@@ -5,18 +5,7 @@
   const BUTTON_ID = 'tg-disappear-toggle';
   const ACTIVE_CLASS = 'tg-disappear-active';
   const STATUS_CLASS_TRIGGER = 'tg-disappear-show-status';
-
-  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-  async function waitForTelegram() {
-    for (let i = 0; i < 600; i += 1) {
-      if (typeof window.getActions === 'function' && typeof window.getGlobal === 'function') {
-        return true;
-      }
-      await wait(200);
-    }
-    throw new Error('Telegram actions not available');
-  }
+  const CHECK_INTERVAL_MS = 250;
 
   function getState() {
     if (!window[STATE_KEY]) {
@@ -201,10 +190,62 @@
     ensureTogglePresence(actions);
   }
 
-  waitForTelegram()
-    .then(init)
-    .catch((err) => {
-      console.error('[tg-disappear] Failed to initialize', err);
-    });
+  let initDone = false;
+
+  function tryInit() {
+    if (initDone) return true;
+    if (typeof window.getActions === 'function' && typeof window.getGlobal === 'function') {
+      try {
+        init();
+        initDone = true;
+        return true;
+      } catch (err) {
+        console.error('[tg-disappear] Unable to initialize', err);
+      }
+    }
+    return false;
+  }
+
+  function hookGetActionsSetter() {
+    if (hookGetActionsSetter.done) return;
+    hookGetActionsSetter.done = true;
+
+    if ('getActions' in window) return;
+
+    try {
+      Object.defineProperty(window, 'getActions', {
+        configurable: true,
+        enumerable: false,
+        get() {
+          return undefined;
+        },
+        set(value) {
+          delete window.getActions;
+          window.getActions = value;
+          Promise.resolve().then(tryInit);
+        },
+      });
+    } catch (err) {
+      console.warn('[tg-disappear] Failed to hook getActions setter', err);
+    }
+  }
+
+  function bootstrap() {
+    if (tryInit()) {
+      return;
+    }
+
+    hookGetActionsSetter();
+
+    const interval = setInterval(() => {
+      if (tryInit()) {
+        clearInterval(interval);
+      }
+    }, CHECK_INTERVAL_MS);
+
+    window.addEventListener('load', tryInit);
+  }
+
+  bootstrap();
 })();
 
