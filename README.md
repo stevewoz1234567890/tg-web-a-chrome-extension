@@ -11,7 +11,7 @@ Telegram and related marks are trademarks of their respective owners. This proje
 | `telegram.html` | HTML shell for the Telegram Web A client (entry document). |
 | `telegram-main.js`, `chunk-*.js` | Webpack-produced application bundles; matching `*.map` files are included for debugging. |
 | `bundle-main.js` | Placeholder / failed fetch artifact (not a functional bundle). Safe to replace or remove if you supply a real asset. |
-| `AI Stealth: Take Home Challenge 2025/AIStealthTakeHomeChallenge/` | Chrome extension: content scripts and injection helpers scoped to `web.telegram.org/a`. |
+| `extension/` | Chrome extension (MV3): content script + injected page script for `web.telegram.org/a`. |
 
 ## Chrome extension
 
@@ -21,7 +21,7 @@ The extension targets **Telegram Web A only** (`*://web.telegram.org/a*`), per t
 
 1. Open `chrome://extensions`.
 2. Enable **Developer mode**.
-3. Click **Load unpacked** and select the folder   `AI Stealth: Take Home Challenge 2025/AIStealthTakeHomeChallenge/`.
+3. Click **Load unpacked** and select the `extension/` directory in this repository.
 
 Review `manifest.json` for permissions and injected resources before installation.
 
